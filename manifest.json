@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Check the student attendance",
   "manifest_version": 3,
-  "author": "Satoshi Nakamoto",
+  "author": "David Fontes, Diogo Pina Manique",
   "action": {
     "default_popup": "index.html",
     "default_title": "Student Attendance Check"
