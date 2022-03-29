@@ -18,7 +18,7 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "script-resource.js"
+        "script.js"
       ],
       "matches": [
         "http://portal.ipbeja.pt/*",
