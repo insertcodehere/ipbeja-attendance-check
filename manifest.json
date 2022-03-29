@@ -1,0 +1,36 @@
+{
+  "name": "IPBeja Student Attendance Check",
+  "version": "1.0.0",
+  "description": "Check the student attendance",
+  "manifest_version": 3,
+  "author": "Satoshi Nakamoto",
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "Student Attendance Check"
+  },
+  "permissions": [
+    "debugger"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "script-resource.js"
+      ],
+      "matches": [
+        "http://portal.ipbeja.pt/*",
+        "https://portal.ipbeja.pt/*"
+      ]
+    }
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "http://portal.ipbeja.pt/*",
+        "https://portal.ipbeja.pt/*"
+      ],
+      "js": [
+        "content-script.js"
+      ]
+    }
+  ]
+}
