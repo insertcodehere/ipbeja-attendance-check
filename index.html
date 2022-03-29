@@ -8,17 +8,19 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <textarea class="student-ids" rows="15">
-22541
-22606
-22644
-22623
-22690
-23104
-22586
-22000@ipbeja.pt
-    </textarea>
+    <p>Student IDs:</p>
+    <textarea class="student-ids" rows="15"></textarea>
+    
+    <div>
+      <input type="checkbox" id="auto-absent" name="auto-absent" disabled>
+      <label for="auto-absent">Auto set absent (TBD)</label>
+    </div>
 
+    <div>
+      <label for="regex">Custom regex</label>
+      <input type="text" id="regex" name="regex" disabled placeholder="\d+">
+    </div>
+    
     <button class="action action-execute">Execute</button>
 
     <script src="popup-script.js"></script>

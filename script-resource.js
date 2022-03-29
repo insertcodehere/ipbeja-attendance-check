@@ -1,7 +1,9 @@
+const debug = true;
+
 window.addEventListener('message', event => {
   if (event?.data?.id === 'supercenas' && event?.data?.type === 'request') {
-    console.log('Message from window!', event.data);
-    console.log('Message from window!', event.data.payload);
+    if (debug) console.log('Message from window!', event.data);
+    if (debug) console.log('Message from window!', event.data.payload);
 
     execute(event.data.payload).then(() => {
       window.postMessage({ id: 'supercenas', type: 'response', done: true });
@@ -9,7 +11,8 @@ window.addEventListener('message', event => {
   }
 });
 
-async function execute(studentsArg) {
+async function execute(request) {
+  if (debug) console.log(request)
   const container = document.querySelector('#alunosAulaGrid');
   const tablePagesParts = container.querySelector('#tbtext-1028').textContent.split(' ');
   const tablePages = +tablePagesParts[tablePagesParts.length - 1];
@@ -22,30 +25,29 @@ async function execute(studentsArg) {
 
 
   if (!firstPageButton.disabled) {
-    console.log(performance.now());
+    if (debug) console.log(performance.now());
     firstPageButton.click();
     await waitUntil(events.load);
-    console.log(performance.now());
+    if (debug) console.log(performance.now());
   }
 
 
-  await processAllPages(studentsArg);
+  await processAllPages(request.students, request.setAbsent);
 
-  async function processAllPages(students) {
+  async function processAllPages(students, setAbsent) {
     for (let i = 0; i < tablePages; i++) {
-      await processNextPage(students);
+      await processNextPage(students, setAbsent);
+      if (students.length == 0) break;
+      nextPageButton.click();
+      return waitUntil(events.load);
     }
   }
 
-  async function processNextPage(students) {
-    // debugger;
+  async function processNextPage(students, setAbsent) {
     const table = container.querySelector('#alunosAulaGrid-body table');
     let tableRows = table.querySelectorAll('.x-grid-row');
-    console.log(tableRows);
+    if (debug) console.log(tableRows);
     await processStudents(students, tableRows);
-    nextPageButton.click();
-
-    return waitUntil(events.load);
   }
 
   async function processStudents(students, rows) {
@@ -65,7 +67,7 @@ async function execute(studentsArg) {
       selectionModel.select(selectionRecord);
       checkbox.click();
       students.splice(studentIndex, 1);
-      console.log('Click', performance.now());
+      if (debug) console.log('Click', performance.now());
 
       return waitUntil(events.write);
     }
