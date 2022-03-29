@@ -1,5 +1,43 @@
 body {
-  padding: 1em;
+  padding: 1em 0.5em;
+  width: 500px;
+}
 
-  width: 300px;
+img {
+  max-width: 100%;
+}
+
+/* Main header */
+.main-header {
+  margin-bottom: 1.5em;
+}
+
+/* Progress bar */
+.execution-progress {
+  margin-bottom: 1em;
+}
+
+.execution-progress .alert-message {
+  margin-left: 0.5em;
+}
+
+/* Execute button */
+.actions {
+  margin-top: 1em;
+}
+
+/* Settings screen */
+#settings-offcanvas .section {
+  border: 2px solid grey;
+  background-color: #f7f7f7;
+  border-radius: 3px;
+  padding: 1em;
+}
+
+.section + .section {
+  margin-top: 1em;
+}
+
+.section h2 {
+  margin-bottom: 1em;
 }

@@ -8,6 +8,10 @@
     "default_popup": "index.html",
     "default_title": "Student Attendance Check"
   },
+  "icons": {
+    "16": "assets/images/icon.png",
+    "128": "assets/images/icon.png"
+  },
   "permissions": [
     "debugger"
   ],
