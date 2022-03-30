@@ -1,5 +1,5 @@
 const debug = true;
-
+const defaultRegex = /\b[1-9][0-9]{3,4}\b/gm;
 
 if (debug) console.log('Popup');
 const studentsTextarea = document.querySelector('.student-ids');
@@ -57,7 +57,8 @@ executeButton.addEventListener('click', _ => {
   executeButton.disabled = true;
   spinner.style.display = 'inline-block';
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    let studentIds = studentsTextarea.value.match(/[1-9]\d{3,4}/gm);
+    //let studentIds = studentsTextarea.value.match(/[1-9]\d{3,4}/gm);
+    let studentIds = studentsTextarea.value.match(defaultRegex);
     chrome.tabs.sendMessage(tabs[0].id, {
       students: studentsTextarea.value,
       setAbsent: setAbsentCheckbox.checked,
@@ -81,5 +82,6 @@ studentsTextarea.addEventListener("input", (event) => {
 function applyHighlights(text) {
   return text
     .replace(/\n$/g, '\n\n')
-    .replace(/[1-9]\d{3,4}/gm, '<mark>$&</mark>');
+    //.replace(/[1-9]\d{3,4}/gm, '<mark>$&</mark>');
+    .replace(defaultRegex, '<mark>$&</mark>');
 }
