@@ -1,5 +1,6 @@
 const debug = true;
-const defaultRegex = /\b[1-9][0-9]{3,4}\b/gm;
+const defaultRegex = /\b[1-9][0-9]{3,4}(?![0-9])/gm;
+const defaultRegex2 = /\b[1-9][0-9]{3,4}\b/gm;
 
 if (debug) console.log('Popup');
 const studentsTextarea = document.querySelector('.student-ids');
@@ -56,20 +57,29 @@ studentsTextarea.addEventListener('input', event => {
 executeButton.addEventListener('click', _ => {
   executeButton.disabled = true;
   spinner.style.display = 'inline-block';
+
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    //let studentIds = studentsTextarea.value.match(/[1-9]\d{3,4}/gm);
     let studentIds = studentsTextarea.value.match(defaultRegex);
-    chrome.tabs.sendMessage(tabs[0].id, {
-      students: studentsTextarea.value,
-      setAbsent: setAbsentCheckbox.checked,
-      regex: regexText.value.trim()
-    }, function (response) {
+    chrome.tabs.sendMessage(tabs[0].id, { students: studentsTextarea.value, setAbsent: setAbsentCheckbox.checked, regex: regexText.value.trim() }, function (response) {
+      if (debug) console.log('Response', response);
+    });
+  });
+});
+
+/* executeButton.addEventListener('click', _ => {
+
+  executeButton.disabled = true;
+  spinner.style.display = 'inline-block';
+
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    let studentIds = studentsTextarea.value.match(defaultRegex);
+    chrome.tabs.sendMessage(tabs[0].id, { students: studentsTextarea.value, setAbsent: setAbsentCheckbox.checked, regex: regexText.value.trim() }, function (response) {
       if (debug) console.log('Response', response);
 
     }
     );
   });
-});
+}); */
 
 
 studentsTextarea.addEventListener("input", (event) => {
