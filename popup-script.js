@@ -13,7 +13,6 @@ const spinner = executeButton.querySelector('.spinner-border');
 
 
 studentsTextarea.addEventListener('scroll', (event) => {
-  debugger;
   var scrollTop = studentsTextarea.scrollTop;
   backdrop.scroll(0, scrollTop);
 }
@@ -60,7 +59,7 @@ executeButton.addEventListener('click', _ => {
 
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     let studentIds = studentsTextarea.value.match(defaultRegex);
-    chrome.tabs.sendMessage(tabs[0].id, { students: studentsTextarea.value, setAbsent: setAbsentCheckbox.checked, regex: defaultRegex }, function (response) {
+    chrome.tabs.sendMessage(tabs[0].id, { students: studentsTextarea.value, setAbsent: setAbsentCheckbox.checked }, function (response) {
       if (debug) console.log('Response', response);
     });
   });

@@ -6,7 +6,7 @@ window.addEventListener('message', event => {
     console.log('Message from window!', event.data.payload);
     let payload = event.data.payload;
     execute(payload).then(() => {
-      window.postMessage({ id: 'supercenas', type: 'response', done: true, missingStudents: payload.students });
+      //window.postMessage({ id: 'supercenas', type: 'response', done: true, missingStudents: payload.students });
     });
   }
 
@@ -19,9 +19,9 @@ async function execute(request) {
   //const tablePages = +tablePagesParts[tablePagesParts.length - 1];
   const tablePages = Math.ceil(alunosAulaGrid_grid.store.totalCount / alunosAulaGrid_grid.store.pageSize);
   const firstPageButton = container.querySelector('#button-1023-btnEl');
-  
+  //const firstPageButton = container.querySelector('#button-1022-btnEl');
   const nextPageButton = container.querySelector('#button-1030-btnEl');
-
+  //const nextPageButton = container.querySelector('#button-1029-btnEl');
 
   const state = alunosAulaGrid_grid;
   const selectionModel = state.getSelectionModel();
