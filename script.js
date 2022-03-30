@@ -18,10 +18,10 @@ async function execute(request) {
   //const tablePagesParts = container.querySelector('#tbtext-1028').textContent.split(' ');
   //const tablePages = +tablePagesParts[tablePagesParts.length - 1];
   const tablePages = Math.ceil(alunosAulaGrid_grid.store.totalCount / alunosAulaGrid_grid.store.pageSize);
-  // const firstPageButton = container.querySelector('#button-1023-btnEl');
-  const firstPageButton = container.querySelector('#button-1022-btnEl');
-  // const nextPageButton = container.querySelector('#button-1030-btnEl');
-  const nextPageButton = container.querySelector('#button-1029-btnEl');
+  const firstPageButton = container.querySelector('#button-1023-btnEl');
+  
+  const nextPageButton = container.querySelector('#button-1030-btnEl');
+
 
   const state = alunosAulaGrid_grid;
   const selectionModel = state.getSelectionModel();
