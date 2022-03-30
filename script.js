@@ -2,13 +2,14 @@ const debug = true;
 
 window.addEventListener('message', event => {
   if (event?.data?.id === 'supercenas' && event?.data?.type === 'request') {
-    if (debug) console.log('Message from window!', event.data);
-    if (debug) console.log('Message from window!', event.data.payload);
-
-    execute(event.data.payload).then(() => {
-      window.postMessage({ id: 'supercenas', type: 'response', done: true });
+    console.log('Message from window!', event.data);
+    console.log('Message from window!', event.data.payload);
+    let payload = event.data.payload;
+    execute(payload).then(() => {
+      window.postMessage({ id: 'supercoiso', type: 'response', done: true, missingStudents: payload.students });
     });
   }
+
 });
 
 async function execute(request) {
@@ -51,8 +52,12 @@ async function execute(request) {
   }
 
   async function processStudents(students, rows) {
+    const total = students.length;
+
     for (let row of rows) {
       await checkStudent(students, row);
+      const count = students.length;
+      //window.postMessage({ id: 'supercenas', type: 'progress', count : count, total: total});
     }
   }
 
