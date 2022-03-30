@@ -2,11 +2,13 @@ window.addEventListener('message', event => {
   if (event?.data?.id === 'supercenas' && event?.data?.type === 'request') {
     console.log('Message from window!', event.data);
     console.log('Message from window!', event.data.payload);
-
-    execute(event.data.payload).then(() => {
-      window.postMessage({ id: 'supercenas', type: 'response', done: true });
+    let payload = event.data.payload;
+    execute(payload).then(() => {
+      //window.postMessage({ id: 'supercenas', type: 'response', done: true });
+      window.postMessage({ id: 'supercenas', type: 'response', done: true, missingStudents: payload.students });
     });
   }
+
 });
 
 async function execute(studentsArg) {
@@ -30,6 +32,7 @@ async function execute(studentsArg) {
 
 
   await processAllPages(studentsArg);
+
 
   async function processAllPages(students) {
     for (let i = 0; i < tablePages; i++) {
