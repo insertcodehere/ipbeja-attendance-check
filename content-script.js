@@ -4,7 +4,7 @@ function log(message, ...args) {
   if (debug) console.log(message, ...args);
 }
 
-const port = chrome.runtime.connect('bpfdpijjjidgiljembmelnfdiflmmlhk', { name: 'student-attendance-channel' });
+const port = chrome.runtime.connect(chrome.runtime.id, { name: 'student-attendance-channel' });
 
 port.onMessage.addListener(function (event) {
   log('Settings', event);

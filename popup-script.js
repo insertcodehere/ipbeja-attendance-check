@@ -20,7 +20,7 @@ function log(message, ...args) {
 
 log('Popup opened');
 
-const port = chrome.runtime.connect('bpfdpijjjidgiljembmelnfdiflmmlhk', { name: 'student-attendance-channel' });
+const port = chrome.runtime.connect(chrome.runtime.id, { name: 'student-attendance-channel' });
 
 port.onMessage.addListener(function (event) {
   // Progress
@@ -99,7 +99,7 @@ executeButton.addEventListener('click', _ => {
 
 chrome.storage.sync.get(['studentNrs'], function (result) {
   if (debug) console.log('Value currently is ' + result);
-  studentsTextarea.value = result.studentNrs;
+  studentsTextarea.value = result.studentNrs ?? '';
   textAreaUpdate();
 });
 
