@@ -1,34 +1,50 @@
-const debug = true;
+const debug = false;
 
-if (debug) console.log('Runtime', chrome.runtime);
-if (debug) console.log('onMessage', chrome.runtime.onMessage);
+function log(message, ...args) {
+  if (debug) console.log(message, ...args);
+}
 
+const port = chrome.runtime.connect('bpfdpijjjidgiljembmelnfdiflmmlhk', { name: 'student-attendance-channel' });
+
+port.onMessage.addListener(function (event) {
+  log('Settings', event);
+  dispatchWorker(event.payload);
+});
+
+// Inject and load the script into the page
 const scriptElement = document.createElement('script');
 scriptElement.src = chrome.runtime.getURL('script.js');
 (document.head || document.documentElement).appendChild(scriptElement);
 
+function dispatchWorker(settings) {
+  window.postMessage({ id: 'supercenas', source: 'CONTENT_SCRIPT', payload: settings });
+}
 
+window.addEventListener('message', event => {
+  if (event.data?.id === 'supercenas' && event.data.source === 'SCRIPT') {
+    log('Message received at ContentScript:', event.data.payload);
 
-chrome.runtime.onMessage.addListener(async function (request, sender, sendResponse) {
-  if (debug) console.log('Tab', sender.tab);
-  const rawStudents = request.students;
-
-  const regex = /[1-9]\d{3,4}/gm; // todo: use request.regex if not empty
-  const students = rawStudents.match(regex);
-  request.students = students;
-
-  /* window.addEventListener('message', (event) => {
-    if (event.data.id === 'supercoiso' && event.data.type === 'response') {
-        sendResponse(event.data);
-    }
-  }) */
-  await execute(request);
-
-
+    // Progress
+    // Done
+    port.postMessage({ source: 'CONTENT_SCRIPT', payload: event.data.payload });
+  }
 });
 
-async function execute(students) {
-  window.postMessage({ id: 'supercenas', type: 'request', payload: students });
+// chrome.runtime.onMessage.addListener(async function (request, sender, sendResponse) {
+//   log('On message sender tab:', sender.tab);
 
-  return;
-}
+//   window.addEventListener('message', (event) => {
+//     if (event.data.id === 'supercoiso' && event.data.type === 'response') {
+//       sendResponse(event.data);
+//     }
+//   })
+//   await execute(request);
+
+//   return true;
+// });
+
+// async function execute(students) {
+//   window.postMessage({ id: 'supercenas', type: 'request', payload: students });
+
+//   return;
+// }

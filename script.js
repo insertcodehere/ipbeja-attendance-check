@@ -1,27 +1,29 @@
-const debug = true;
+const debug = false;
+
+let total = -1;
+
+function log(message, ...args) {
+  if (debug) console.log(message, ...args);
+}
 
 window.addEventListener('message', event => {
-  if (event?.data?.id === 'supercenas' && event?.data?.type === 'request') {
-    console.log('Message from window!', event.data);
-    console.log('Message from window!', event.data.payload);
+  if (event?.data?.id === 'supercenas' && event?.data?.source === 'CONTENT_SCRIPT') {
+    log('Message received in script:', event.data.payload);
     let payload = event.data.payload;
+    total = payload.students.length;
     execute(payload).then(() => {
-      //window.postMessage({ id: 'supercenas', type: 'response', done: true, missingStudents: payload.students });
+      const responsePayload = { done: true };
+      window.postMessage({ id: 'supercenas', source: 'SCRIPT', payload: responsePayload });
     });
   }
-
 });
 
 async function execute(request) {
-  if (debug) console.log(request)
+  log(request)
   const container = document.querySelector('#alunosAulaGrid');
-  //const tablePagesParts = container.querySelector('#tbtext-1028').textContent.split(' ');
-  //const tablePages = +tablePagesParts[tablePagesParts.length - 1];
   const tablePages = Math.ceil(alunosAulaGrid_grid.store.totalCount / alunosAulaGrid_grid.store.pageSize);
-  const firstPageButton = container.querySelector('#button-1023-btnEl');
-  //const firstPageButton = container.querySelector('#button-1022-btnEl');
-  const nextPageButton = container.querySelector('#button-1030-btnEl');
-  //const nextPageButton = container.querySelector('#button-1029-btnEl');
+  const [firstPageButton, , nextPageButton] = document.querySelectorAll('#PagingToolbar_marcarfaltasalunos_alunosAulaGrid-targetEl button');
+  const setAllStudentsAbsentButton = document.querySelector('#alunosAulaGrid > div:first-child .x-btn:nth-child(5) button');
 
   const state = alunosAulaGrid_grid;
   const selectionModel = state.getSelectionModel();
@@ -29,10 +31,8 @@ async function execute(request) {
 
 
   if (!firstPageButton.disabled) {
-    if (debug) console.log(performance.now());
     firstPageButton.click();
     await waitUntil(events.load);
-    if (debug) console.log(performance.now());
   }
 
 
@@ -40,29 +40,30 @@ async function execute(request) {
   // window.postMessage({ id: 'supercenas', type: 'response', missingStudents : request.students});
 
   async function processAllPages(students, setAbsent) {
+    // If setAbsent, cenas
+    if (setAbsent) {
+      setAllStudentsAbsentButton.click();
+      await waitUntil(events.load);
+    }
+
     for (let i = 0; i < tablePages; i++) {
-      await processNextPage(students, setAbsent);
+      await processNextPage(students);
       if (students.length == 0) break;
       nextPageButton.click();
       await waitUntil(events.load);
     }
   }
 
-  async function processNextPage(students, setAbsent) {
+  async function processNextPage(students) {
     const table = container.querySelector('#alunosAulaGrid-body table');
     let tableRows = table.querySelectorAll('.x-grid-row');
-    if (debug) console.log(tableRows);
     await processStudents(students, tableRows);
   }
 
   async function processStudents(students, rows) {
-    const total = students.length;
-
     for (let row of rows) {
       await checkStudent(students, row);
-      const count = students.length;
-      if(students.length == 0) break;
-      //window.postMessage({ id: 'supercenas', type: 'progress', count : count, total: total});
+      if (students.length == 0) break;
     }
   }
 
@@ -72,14 +73,14 @@ async function execute(request) {
     const studentIndex = students.findIndex(student => student === studentNumberTd);
 
     if (studentIndex > -1) {
-      // changePresenca(checkbox);
       const selectionRecord = selectionModel.store.getAt(row.viewIndex);
       selectionModel.select(selectionRecord);
       checkbox.click();
       students.splice(studentIndex, 1);
-      if (debug) console.log('Click', performance.now());
 
-      return waitUntil(events.write);
+      return waitUntil(events.write).then(() => {
+        window.postMessage({ id: 'supercenas', source: 'SCRIPT', payload: { processedStudents: total - students.length, total: total } });
+      });
     }
 
     return Promise.resolve();
