@@ -24,27 +24,6 @@ window.addEventListener('message', event => {
   if (event.data?.id === 'supercenas' && event.data.source === 'SCRIPT') {
     log('Message received at ContentScript:', event.data.payload);
 
-    // Progress
-    // Done
     port.postMessage({ source: 'CONTENT_SCRIPT', payload: event.data.payload });
   }
 });
-
-// chrome.runtime.onMessage.addListener(async function (request, sender, sendResponse) {
-//   log('On message sender tab:', sender.tab);
-
-//   window.addEventListener('message', (event) => {
-//     if (event.data.id === 'supercoiso' && event.data.type === 'response') {
-//       sendResponse(event.data);
-//     }
-//   })
-//   await execute(request);
-
-//   return true;
-// });
-
-// async function execute(students) {
-//   window.postMessage({ id: 'supercenas', type: 'request', payload: students });
-
-//   return;
-// }

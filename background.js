@@ -1,4 +1,4 @@
-const debug = false;
+const debug = true;
 const ports = {};
 
 function log(message, ...args) {
@@ -28,16 +28,6 @@ chrome.runtime.onInstalled.addListener(() => {
       if (event.source === 'POPUP') {
         log('[Done] Relay to content-script.js', event);
         ports['page'].postMessage(event);
-
-        // setTimeout(() => {
-        //   port.postMessage({
-        //     source: 'BACKGROUND',
-        //     destination: 'POPUP',
-        //     payload: {
-        //       done: true
-        //     }
-        //   });
-        // }, 2000);
       }
       else if (event.source === 'CONTENT_SCRIPT') {
         log('[In progress] Relay to popup.js', event);
