@@ -58,7 +58,9 @@ img {
   margin-top: 1em;
 }
 
-.section h2 {
+.section .section-header {
+  display: flex;
+  justify-content: space-between;
   margin-bottom: 1em;
 }
 
@@ -114,6 +116,10 @@ img {
   resize: none;
 }
 
+#students-ids-input:invalid {
+  border: 1px solid red;
+}
+
 mark {
   padding: 0;
   border-radius: 3px;
@@ -128,8 +134,20 @@ footer {
   padding: 0.5em 1em;
 }
 
+footer .developed-by-label {
+  font-weight: 600;
+  color: #8f8f8f;
+}
+
 footer ul {
   margin: 0;
+  padding: 0;
+  font-size: 0.9em;
+  list-style: none inside;
+}
+
+footer .author a {
+  color: black;
 }
 
 footer img {

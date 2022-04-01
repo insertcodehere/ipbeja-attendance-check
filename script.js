@@ -23,6 +23,7 @@ async function execute(request) {
   const container = document.querySelector('#alunosAulaGrid');
   const tablePages = Math.ceil(alunosAulaGrid_grid.store.totalCount / alunosAulaGrid_grid.store.pageSize);
   const [firstPageButton, , nextPageButton] = document.querySelectorAll('#PagingToolbar_marcarfaltasalunos_alunosAulaGrid-targetEl button');
+  const saveButton = document.querySelector('#marcacaoFaltasDialog_gravar-btnEl');
   const setAllStudentsAbsentButton = document.querySelector('#alunosAulaGrid > div:first-child .x-btn:nth-child(5) button');
 
   const state = alunosAulaGrid_grid;
@@ -38,6 +39,11 @@ async function execute(request) {
 
   await processAllPages(request.students, request.setAbsent);
   // window.postMessage({ id: 'supercenas', type: 'response', missingStudents : request.students});
+
+  if (request.autoSave) {
+    saveButton.click();
+    await waitUntil(events.load);
+  }
 
   async function processAllPages(students, setAbsent) {
     // If setAbsent, cenas
@@ -73,14 +79,19 @@ async function execute(request) {
     const studentIndex = students.findIndex(student => student === studentNumberTd);
 
     if (studentIndex > -1) {
-      const selectionRecord = selectionModel.store.getAt(row.viewIndex);
-      selectionModel.select(selectionRecord);
-      checkbox.click();
+      let done;
+      if (!checkbox.checked) {
+        const selectionRecord = selectionModel.store.getAt(row.viewIndex);
+        selectionModel.select(selectionRecord);
+        checkbox.click();
+        done = waitUntil(events.write).then(() => {
+          window.postMessage({ id: 'supercenas', source: 'SCRIPT', payload: { processedStudents: total - students.length, total: total } });
+        });
+      }
+
       students.splice(studentIndex, 1);
 
-      return waitUntil(events.write).then(() => {
-        window.postMessage({ id: 'supercenas', source: 'SCRIPT', payload: { processedStudents: total - students.length, total: total } });
-      });
+      return done;
     }
 
     return Promise.resolve();

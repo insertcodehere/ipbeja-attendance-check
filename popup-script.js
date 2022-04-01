@@ -4,6 +4,7 @@ const defaultRegex = /\b[1-9][0-9]{3,4}(?![0-9])/gm;
 const defaultRegex2 = /\b[1-9][0-9]{3,4}\b/gm;
 
 const studentsTextarea = document.querySelector('.student-ids');
+const autoSaveCheckbox = document.querySelector('#auto-save-switch');
 const setAbsentCheckbox = document.querySelector('#student-absence-switch');
 const regexText = document.querySelector("#student-ids-regex-input");
 const executeButton = document.querySelector('.action.action-execute');
@@ -17,6 +18,18 @@ regexText.addEventListener('input', textAreaUpdate);
 function log(message, ...args) {
   if (debug) console.log(message, ...args);
 }
+
+const revertConfigurationButton = document.querySelector('#revert-configuration-to-default');
+const revertDeveloperButton = document.querySelector('#revert-developer-to-default');
+
+revertConfigurationButton.addEventListener('click', _ => {
+  autoSaveCheckbox.checked = false;
+  setAbsentCheckbox.checked = true;
+});
+
+revertDeveloperButton.addEventListener('click', _ => {
+  regexText.value = '\\b[1-9][0-9]{3,4}(?![0-9])';
+});
 
 log('Popup opened');
 
@@ -44,17 +57,28 @@ studentsTextarea.addEventListener('scroll', (event) => {
   backdrop.scroll(0, scrollTop);
 });
 
+autoSaveCheckbox.addEventListener('change', event => {
+  chrome.storage.sync.set({ 'autoSave': event.target.checked }, function () {
+    log('Set value into storage (autoSave):', event.target.checked);
+  });
+  event.target.checked
+});
+
+chrome.storage.sync.get(['autoSave'], function (result) {
+  log('Loaded value from storage (autoSave):', result.autoSave);
+  autoSaveCheckbox.checked = result.autoSave ?? false;
+});
+
 setAbsentCheckbox.addEventListener('change', event => {
   chrome.storage.sync.set({ 'setAbsent': event.target.checked }, function () {
     log('Set value into storage (setAbsent):', event.target.checked);
   });
   event.target.checked
-})
+});
 
 chrome.storage.sync.get(['setAbsent'], function (result) {
   log('Loaded value from storage (setAbsent):', result.setAbsent);
   setAbsentCheckbox.checked = result.setAbsent ?? true;
-  textAreaUpdate();
 });
 
 function textAreaUpdate() {
@@ -75,6 +99,7 @@ executeButton.addEventListener('click', _ => {
 
   const payload = {
     students: studentIds,
+    autoSave: autoSaveCheckbox.checked,
     setAbsent: setAbsentCheckbox.checked
   };
   const event = {
