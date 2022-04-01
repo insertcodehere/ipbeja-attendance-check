@@ -116,10 +116,6 @@ img {
   resize: none;
 }
 
-#students-ids-input:invalid {
-  border: 1px solid red;
-}
-
 mark {
   padding: 0;
   border-radius: 3px;

@@ -13,7 +13,17 @@ const backdrop = document.querySelector('.backdrop');
 const spinner = executeButton.querySelector('.spinner-border');
 const progressBar = document.querySelector('.execution-progress > .progress-bar');
 
-regexText.addEventListener('input', textAreaUpdate);
+regexText.addEventListener('input', _ => {
+  textAreaUpdate();
+  const isRegexEmpty = !regexText.checkValidity();
+
+  if (isRegexEmpty) {
+    regexText.classList.add('is-invalid');
+  }
+  else {
+    regexText.classList.remove('is-invalid');
+  }
+});
 
 function log(message, ...args) {
   if (debug) console.log(message, ...args);
@@ -61,7 +71,6 @@ autoSaveCheckbox.addEventListener('change', event => {
   chrome.storage.sync.set({ 'autoSave': event.target.checked }, function () {
     log('Set value into storage (autoSave):', event.target.checked);
   });
-  event.target.checked
 });
 
 chrome.storage.sync.get(['autoSave'], function (result) {
@@ -73,7 +82,6 @@ setAbsentCheckbox.addEventListener('change', event => {
   chrome.storage.sync.set({ 'setAbsent': event.target.checked }, function () {
     log('Set value into storage (setAbsent):', event.target.checked);
   });
-  event.target.checked
 });
 
 chrome.storage.sync.get(['setAbsent'], function (result) {
