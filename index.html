@@ -43,31 +43,58 @@
           </div>
         </div>
 
-        <!-- <div class="alert-student-not-found alert alert-warning d-flex alert-dismissible fade show" role="alert">
-          <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Warning:" viewBox="0 0 16 16">
-            <path
-              d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z" />
-          </svg>
-          <div class="alert-message">The students ${22000}, ${22001} and ${22003@ipbeja.pt} could not be found.</div>
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div> -->
+        <ul class="nav nav-tabs">
+          <li class="nav-item">
+            <button
+              id="textarea-tab"
+              class="nav-link active"
+              data-bs-toggle="tab"
+              data-bs-target="#textarea-content"
+              type="button"
+              role="tab"
+              aria-controls="textarea"
+              aria-selected="true">
+              Text input
+            </button>
+          </li>
+          <li class="nav-item">
+            <button
+              id="file-tab"
+              class="nav-link disabled"
+              data-bs-toggle="tab"
+              data-bs-target="#file-content"
+              type="button"
+              role="tab"
+              aria-controls="file"
+              aria-selected="false">
+              File
+            </button>
+          </li>
+        </ul>
 
-        <div class="textarea-wrapper">
-          <div class="backdrop">
-            <div class="highlights">
-              <!-- cloned text with <mark> tags here -->
+        <div class="tab-content">
+          <div class="tab-pane active" id="textarea-content" role="tabpanel" aria-labelledby="textarea-tab">
+            <div class="alert-students-not-found"></div>
+
+            <div class="textarea-wrapper">
+              <div class="backdrop">
+                <div class="highlights">
+                  <!-- cloned text with <mark> tags here -->
+                </div>
+              </div>
+              <textarea
+                id="student-ids-input"
+                class="student-ids form-control"
+                rows="10"
+                placeholder="Ex:
+22000
+22001
+22002
+22003@ipbeja.pt
+..."></textarea>
             </div>
           </div>
-          <textarea
-            id="student-ids-input"
-            class="student-ids form-control"
-            rows="10"
-            placeholder="Ex:
-  22000
-  22001
-  22002
-  22003@ipbeja.pt
-  ..."></textarea>
+          <div class="tab-pane" id="file-content" role="tabpanel" aria-labelledby="file-tab"></div>
         </div>
 
         <div class="actions">
