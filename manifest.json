@@ -13,7 +13,7 @@
     "128": "assets/images/icon.png"
   },
   "permissions": [
-    "debugger",
+    "tabs",
     "storage"
   ],
   "web_accessible_resources": [

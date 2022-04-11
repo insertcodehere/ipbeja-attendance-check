@@ -32,10 +32,23 @@ chrome.runtime.onConnect.addListener(function (port) {
       ports['extension'].postMessage(event);
     }
     else {
-      // Source, Destination, Id, Payload
       log('Else', event);
     }
   });
+});
+
+chrome.tabs.onActivated.addListener(function (tabInfo) {
+  log('CurrentTabInfo:', tabInfo);
+  chrome.tabs.get(tabInfo.tabId, function (currentTab) {
+    log('CurrentTab:', currentTab);
+    if (currentTab.url.includes('portal.ipbeja.pt/netpa')) {
+      chrome.action.enable();
+    }
+    else {
+      chrome.action.disable();
+    }
+  });
+
 });
 
 // For debug
