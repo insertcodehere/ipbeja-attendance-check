@@ -12,7 +12,7 @@ window.addEventListener('message', event => {
     let payload = event.data.payload;
     total = payload.students.length;
     execute(payload).then(() => {
-      const responsePayload = { done: true };
+      const responsePayload = { done: true, notFoundStudents: payload.students };
       window.postMessage({ id: 'supercenas', source: 'SCRIPT', payload: responsePayload });
     });
   }
@@ -36,9 +36,7 @@ async function execute(request) {
     await waitUntil(events.load);
   }
 
-
   await processAllPages(request.students, request.setAbsent);
-  // window.postMessage({ id: 'supercenas', type: 'response', missingStudents : request.students});
 
   if (request.autoSave) {
     saveButton.click();
@@ -46,7 +44,6 @@ async function execute(request) {
   }
 
   async function processAllPages(students, setAbsent) {
-    // If setAbsent, cenas
     if (setAbsent) {
       setAllStudentsAbsentButton.click();
       await waitUntil(events.load);
@@ -54,7 +51,7 @@ async function execute(request) {
 
     for (let i = 0; i < tablePages; i++) {
       await processNextPage(students);
-      if (students.length == 0) break;
+      if (students.length == 0 || i + 1 === tablePages) break;
       nextPageButton.click();
       await waitUntil(events.load);
     }
@@ -79,19 +76,19 @@ async function execute(request) {
     const studentIndex = students.findIndex(student => student === studentNumberTd);
 
     if (studentIndex > -1) {
-      let done;
+      let request;
       if (!checkbox.checked) {
         const selectionRecord = selectionModel.store.getAt(row.viewIndex);
         selectionModel.select(selectionRecord);
         checkbox.click();
-        done = waitUntil(events.write).then(() => {
+        request = waitUntil(events.write).then(() => {
           window.postMessage({ id: 'supercenas', source: 'SCRIPT', payload: { processedStudents: total - students.length, total: total } });
         });
       }
 
       students.splice(studentIndex, 1);
 
-      return done;
+      return request;
     }
 
     return Promise.resolve();

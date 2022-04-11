@@ -12,6 +12,7 @@ const highlights = document.querySelector('.highlights');
 const backdrop = document.querySelector('.backdrop');
 const spinner = executeButton.querySelector('.spinner-border');
 const progressBar = document.querySelector('.execution-progress > .progress-bar');
+const alertStudentsNotFound = document.querySelector('.alert-students-not-found');
 
 regexText.addEventListener('input', _ => {
   textAreaUpdate();
@@ -52,10 +53,48 @@ port.onMessage.addListener(function (event) {
     log('Calculate progress bar', percentage, event.payload);
     progressBar.style.width = `${percentage}%`;
     progressBar.innerText = `${percentage}%`;
+    progressBar.ariaValueNow = `${percentage}`;
   }
 
   // Done
   if (event.source === 'CONTENT_SCRIPT' && event.payload.done) {
+    const notFoundStudents = event.payload.notFoundStudents;
+    if (notFoundStudents.length) {
+      progressBar.style.width = `100%`;
+      progressBar.innerText = `100%`;
+      progressBar.ariaValueNow = `100`;
+
+      textAreaUpdate(notFoundStudents);
+
+      const alertContent = `
+      <div class="alert-students-not-found-content alert alert-warning d-flex alert-dismissible fade show" role="alert">
+        <svg
+          class="bi flex-shrink-0 me-2"
+          width="24"
+          height="24"
+          role="img"
+          aria-label="Warning:"
+          viewBox="0 0 16 16">
+          <path
+            d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z" />
+        </svg>
+        <div class="alert-message">
+          <div class="alert-message-intro">The students below could not be found.</div>
+          <ul>
+            ${notFoundStudents.map(notFoundStudent => `<li>${notFoundStudent}</li>`).join('')}
+          </ul>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>`;
+      alertStudentsNotFound.innerHTML = alertContent;
+      alertStudentsNotFound.classList.add('visible');
+
+      const alert = document.querySelector('.alert-students-not-found-content');
+      alert.addEventListener('closed.bs.alert', function () {
+        alertStudentsNotFound.classList.remove('visible');
+      });
+    }
+
     executeButton.disabled = false;
     spinner.style.display = 'none';
   }
@@ -89,14 +128,14 @@ chrome.storage.sync.get(['setAbsent'], function (result) {
   setAbsentCheckbox.checked = result.setAbsent ?? true;
 });
 
-function textAreaUpdate() {
+function textAreaUpdate(exclusion = []) {
   const currentValue = studentsTextarea.value;
-  const highlighted = applyHighlights(currentValue);
+  const highlighted = applyHighlights(currentValue, exclusion);
   highlights.innerHTML = highlighted;
 }
 
 studentsTextarea.addEventListener('input', event => {
-  textAreaUpdate(event);
+  textAreaUpdate();
 });
 
 executeButton.addEventListener('click', _ => {
@@ -143,10 +182,21 @@ studentsTextarea.addEventListener("input", (event) => {
 });
 
 
-function applyHighlights(text) {
-  const regex = regexText.value ? new RegExp(regexText.value, 'gm') : defaultRegex;
-  return text
+function applyHighlights(text, exclusion) {
+  let prefix = '';
+  if (exclusion.length) {
+    prefix = `(?!${exclusion.join('|')})`;
+  }
+  const successRegex = regexText.value ? new RegExp(`${prefix}(${regexText.value})`, 'gm') : defaultRegex;
+
+  let textHighlighted = text
     .replace(/\n$/g, '\n\n')
-    //.replace(/[1-9]\d{3,4}/gm, '<mark>$&</mark>');
-    .replace(regex, '<mark>$&</mark>');
+    .replace(successRegex, `<mark class="success">$&</mark>`);
+
+  if (exclusion.length) {
+    const failureRegex = new RegExp(`${exclusion.join('|')}`, 'gm');
+    textHighlighted = textHighlighted.replace(failureRegex, `<mark class="failure">$&</mark>`);
+  }
+
+  return textHighlighted;
 }

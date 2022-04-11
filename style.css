@@ -37,6 +37,24 @@ img {
   margin-left: 0.5em;
 }
 
+/* Alert message */
+.alert-students-not-found {
+  display: none;
+}
+
+.alert-students-not-found.visible {
+  display: block;
+}
+
+.alert-students-not-found .alert-message ul {
+  margin-bottom: 0;
+}
+
+.alert-students-not-found-content {
+  margin-bottom: 0;
+  border-radius: 0;
+}
+
 /* Execute button */
 .actions {
   margin-top: 1em;
@@ -74,7 +92,7 @@ img {
 .backdrop,
 #student-ids-input {
   width: 460px;
-  height: 260px;
+  height: 200px;
 }
 
 .highlights,
@@ -82,6 +100,10 @@ img {
   padding: 10px;
   font: 20px/28px 'Open Sans', sans-serif;
   letter-spacing: 1px;
+}
+
+#student-ids-input {
+  border-top: none;
 }
 
 .textarea-wrapper {
@@ -120,7 +142,14 @@ mark {
   padding: 0;
   border-radius: 3px;
   color: transparent;
+}
+
+mark.success {
   background-color: rgb(170, 247, 174);
+}
+
+mark.failure {
+  background-color: rgb(247, 170, 180);
 }
 
 /* footer */
