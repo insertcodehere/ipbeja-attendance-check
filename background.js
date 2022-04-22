@@ -37,15 +37,37 @@ chrome.runtime.onConnect.addListener(function (port) {
   });
 });
 
+chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+  console.log('ChangeInfo', changeInfo);
+  console.log('Tab', tab);
+
+  if (!changeInfo.url) return;
+
+  if (changeInfo.url.includes('portal.ipbeja.pt/netpa')) {
+    chrome.action.enable({
+      tabId: tabId
+    });
+  }
+  else {
+    chrome.action.disable({
+      tabId: tabId
+    });
+  }
+});
+
 chrome.tabs.onActivated.addListener(function (tabInfo) {
   log('CurrentTabInfo:', tabInfo);
   chrome.tabs.get(tabInfo.tabId, function (currentTab) {
     log('CurrentTab:', currentTab);
     if (currentTab.url.includes('portal.ipbeja.pt/netpa')) {
-      chrome.action.enable();
+      chrome.action.enable({
+        tabId: tabInfo.tabId
+      })
     }
     else {
-      chrome.action.disable();
+      chrome.action.disable({
+        tabId: tabInfo.tabId
+      });
     }
   });
 
