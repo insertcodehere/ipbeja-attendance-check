@@ -10,9 +10,28 @@ const regexText = document.querySelector("#student-ids-regex-input");
 const executeButton = document.querySelector('.action.action-execute');
 const highlights = document.querySelector('.highlights');
 const backdrop = document.querySelector('.backdrop');
-const spinner = executeButton.querySelector('.spinner-border');
+const spinner = executeButton.querySelector('.actions .spinner-border');
 const progressBar = document.querySelector('.execution-progress > .progress-bar');
 const alertStudentsNotFound = document.querySelector('.alert-students-not-found');
+const attendanceFile = document.querySelector('#attendance-file-input');
+const modal = document.querySelector('#selectFileDataDialog');
+const attendanceDateElement = modal.querySelector('.select-date-control select');
+const attendanceStatesElement = modal.querySelector('.all-states .controls');
+const modalCancelBtns = modal.querySelectorAll('.cancel');
+const modalExecuteBtn = modal.querySelector('.execute');
+const modalFooterContainer = modal.querySelector('.modal-footer');
+const modalSuccessContainer = modal.querySelector('.success-file-extraction');
+const modalFailureContainer = modal.querySelector('.failure-file-extraction');
+
+let bootstrapModal = new bootstrap.Modal(document.getElementById('selectFileDataDialog'), {
+  backdrop: true,
+  keyboard: false,
+  focus: true
+});
+
+let attendanceData = null;
+
+attendanceFile.addEventListener('change', onUploadFile);
 
 regexText.addEventListener('input', _ => {
   textAreaUpdate();
@@ -24,6 +43,50 @@ regexText.addEventListener('input', _ => {
   else {
     regexText.classList.remove('is-invalid');
   }
+});
+
+modalCancelBtns.forEach(btn => {
+  btn.addEventListener('click', event => {
+    attendanceFile.value = null;
+    attendanceData = null;
+  });
+})
+
+modalExecuteBtn.addEventListener('click', event => {
+  log('Execute the attendance check from the file.');
+
+  // 1. Get the date
+  const sessionDate = {
+    column: attendanceDateElement.value,
+    value: attendanceDateElement.selectedOptions[0].innerText
+  };
+
+  // 2. Get the states
+  let selectedStates = attendanceStatesElement.querySelectorAll('input[type="checkbox"]:checked');
+  selectedStates = Array.from(selectedStates).map(element => ({
+    column: element.dataset.column,
+    value: element.dataset.val
+  }));
+
+  // 3. Prepare the regex to detect if the student attendant the class or not
+  const statesJoined = selectedStates.map(s => s.value).join('|');
+  const regexStr = String.raw`^[${statesJoined}]{1,2}(?=\s)`;
+  const regex = new RegExp(regexStr);
+
+  // 4. Map the type to array of studentIds
+  const studentIds = attendanceData.content
+    .filter(student => {
+      // Using the student[0].row but any item from that array would work as the row is the same for every item
+      const cellText = attendanceData.fileData[`${sessionDate.column}${student[0].row}`].v;
+      return regex.test(cellText) && student[2].value;
+    })
+    .map(student => student[2].value.toString());
+  // 5. Execute the attendance check
+  executeAttendanceCheck(studentIds);
+
+  // Close the dialog and reset the state
+  bootstrapModal.hide();
+  attendanceFile.value = null;
 });
 
 function log(message, ...args) {
@@ -97,6 +160,7 @@ port.onMessage.addListener(function (event) {
 
     executeButton.disabled = false;
     spinner.style.display = 'none';
+    attendanceData = null;
   }
   log('Popup', event);
 });
@@ -139,33 +203,9 @@ studentsTextarea.addEventListener('input', event => {
 });
 
 executeButton.addEventListener('click', _ => {
-  executeButton.disabled = true;
-  spinner.style.display = 'inline-block';
   const regex = regexText.value ? new RegExp(regexText.value, 'gm') : defaultRegex;
   let studentIds = studentsTextarea.value.match(regex);
-
-  const payload = {
-    students: studentIds,
-    autoSave: autoSaveCheckbox.checked,
-    setAbsent: setAbsentCheckbox.checked
-  };
-  const event = {
-    source: 'POPUP',
-    destination: 'CONTENT_SCRIPT',
-    payload: payload
-  };
-  port.postMessage(event);
-
-  // chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-  //   let studentIds = studentsTextarea.value.match(defaultRegex);
-  //   const payload = {
-  //     students: studentIds,
-  //     setAbsent: setAbsentCheckbox.checked
-  //   };
-  //   chrome.tabs.sendMessage(tabs[0].id, payload, function (response) {
-  //     log('Response', response);
-  //   });
-  // });
+  executeAttendanceCheck(studentIds);
 });
 
 
@@ -181,6 +221,22 @@ studentsTextarea.addEventListener("input", (event) => {
   });
 });
 
+function executeAttendanceCheck(studentIds) {
+  executeButton.disabled = true;
+  spinner.style.display = 'inline-block';
+
+  const payload = {
+    students: studentIds,
+    autoSave: autoSaveCheckbox.checked,
+    setAbsent: setAbsentCheckbox.checked
+  };
+  const event = {
+    source: 'POPUP',
+    destination: 'CONTENT_SCRIPT',
+    payload: payload
+  };
+  port.postMessage(event);
+}
 
 function applyHighlights(text, exclusion) {
   let prefix = '';
@@ -199,4 +255,244 @@ function applyHighlights(text, exclusion) {
   }
 
   return textHighlighted;
+}
+
+function onUploadFile(event) {
+  log('File:', event.target.files);
+
+  const file = event.target.files[0];
+
+  // Validate the file submitted
+  const validFileTypeRegex = new RegExp('\.(xls|xlsx)$', 'i');
+  if (!validFileTypeRegex.test(file.name)) {
+    // throw new Error('File invalid format.');
+    modalSuccessContainer.style.display = 'none';
+    modalFooterContainer.style.display = 'none';
+    modalFailureContainer.style.display = 'block';
+    bootstrapModal.show();
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const data = e.target.result;
+    const workbook = XLSX.read(data);
+    extractAttendanceData(workbook);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function extractAttendanceData(workbook) {
+  const [sheet] = Object.values(workbook.Sheets);
+
+  if (!isValidFormat(sheet)) {
+    // throw new Error('File invalid format.');
+    modalSuccessContainer.style.display = 'none';
+    modalFooterContainer.style.display = 'none';
+    modalFailureContainer.style.display = 'block';
+    bootstrapModal.show();
+    return;
+  }
+
+  modalSuccessContainer.style.display = 'block';
+  modalFooterContainer.style.display = 'block';
+  modalFailureContainer.style.display = 'none';
+
+  attendanceData = toAttendanceData(sheet);
+  updateModalView(attendanceData);
+  bootstrapModal.show();
+
+  /*
+    {
+      className: 'Encaminhamento em Redes de Computadores',
+      edges: [{ column: 'A', row: 4, coordinate: 'A4' }, { column: 'N', row: 22, coordinate: 'N22' }],
+      header: [{ column: 'A', row: 4, coordinate: 'A4', value: 'Apelido' }, { column: 'B', row: 4, coordinate: 'B4', value: 'Nome' }, { column: 'C', row: 4, coordinate: 'C4', value: 'ID do aluno' }],
+      content: [
+        [{ column: 'A', row: 5, coordinate: 'A5', value: 'Afonso' }, { column: 'B', row: 5, coordinate: 'B5', value: 'Gonçalo' }, { column: 'C', row: 5, coordinate: 'C5', value: '19428', sessions: [] }],
+      ],
+      sessions: [{ label: '4 Mar 2022 09:30 Todos os alunos', column: 'E', date: '4 Mar 2022 09:30' }, ...],
+      possibleStates: [{ label: 'P', column: 'I' }, { label: 'A', column: 'J' }, { label: 'F', column: 'K' }]
+    } 
+  */
+}
+
+function updateModalView(attendanceData) {
+  attendanceDateElement.innerHTML = '';
+  attendanceData.sessions.forEach(session => {
+    attendanceDateElement.innerHTML += `<option value="${session.column}">${session.label}</option>`
+  });
+
+  attendanceStatesElement.innerHTML = '';
+  attendanceData.possibleStates.forEach(state => {
+    attendanceStatesElement.innerHTML += `
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="checkbox" name="state_${state.label}" data-val="${state.label}" data-column="${state.column}" />
+      <label class="form-check-label">${state.label}</label>
+    </div>`
+  });
+}
+
+function isValidFormat(sheet) {
+  const firstStudent = {
+    firstName: sheet.A5.v,
+    lastName: sheet.B5.v,
+    id: sheet.D5.v.match(/\d+/)?.toString() ?? null,
+    email: sheet.D5.v
+  };
+
+  // If any of the fields are not filled in, it is not a valid format
+  if (!(firstStudent.firstName || firstStudent.lastName || firstStudent.id || firstStudent.email)) {
+    return false;
+  }
+
+  // If the data has has not the correct format, it isn't a student
+  if (!_isStudent(firstStudent)) {
+    return false;
+  }
+
+  return true;
+}
+
+function _isStudent(student) {
+  const validNameRegex = /[A-Za-zÀ-ÖØ-öø-įĴ-őŔ-žǍ-ǰǴ-ǵǸ-țȞ-ȟȤ-ȳɃɆ-ɏḀ-ẞƀ-ƓƗ-ƚƝ-ơƤ-ƥƫ-ưƲ-ƶẠ-ỿ ]+/;
+  const validIdRegex = /\d+/;
+  const validEmailRegex = /.+\@(stu.|alunos.)?ipbeja.pt/i;
+
+  return validNameRegex.test(student.firstName) &&
+    validNameRegex.test(student.lastName) &&
+    validIdRegex.test(student.id) &&
+    validEmailRegex.test(student.email);
+}
+
+function toAttendanceData(sheet) {
+  const attendanceData = {
+    className: sheet.B1.v,
+    edges: _extractEdges(sheet),
+    header: _extractHeader(sheet),
+    content: _extractContent(sheet),
+    sessions: _extractSessions(sheet),
+    possibleStates: _extractPossibleStates(sheet),
+    fileData: { ...sheet }
+  };
+
+  return attendanceData;
+}
+
+function _extractEdges(sheet) {
+  let lastRowIndex = 5;
+  let lastColumnCharCode = 'A'.charCodeAt(0);
+  let inspectedItem;
+
+  while (inspectedItem = sheet[`A${lastRowIndex + 1}`]) {
+    lastRowIndex++;
+  }
+
+  while (inspectedItem = sheet[`${String.fromCharCode(lastColumnCharCode + 1)}${lastRowIndex}`]) {
+    lastColumnCharCode++;
+  }
+
+  return [
+    { column: 'A', row: 5, coordinate: 'A5' },
+    { column: String.fromCharCode(lastColumnCharCode), row: lastRowIndex, coordinate: `${String.fromCharCode(lastColumnCharCode)}${lastRowIndex}` }
+  ];
+}
+
+function _extractHeader(sheet) {
+  const header = [];
+  let cell;
+  let columnCharCode = 'A'.charCodeAt(0);
+  while (state = sheet[`${String.fromCharCode(columnCharCode)}4`]) {
+    cell = sheet[`${String.fromCharCode(columnCharCode)}4`];
+    header.push({
+      column: String.fromCharCode(columnCharCode),
+      row: 4,
+      coordinate: `${String.fromCharCode(columnCharCode)}4`,
+      value: cell.v
+    });
+    columnCharCode = columnCharCode + 1;
+  }
+
+  return header;
+}
+
+function _extractContent(sheet) {
+  const content = [];
+  let rowNumber = 5;
+  while (state = sheet[`A${rowNumber}`]) {
+    firstName = sheet[`A${rowNumber}`];
+    lastName = sheet[`B${rowNumber}`];
+    id = sheet[`C${rowNumber}`];
+    email = sheet[`D${rowNumber}`];
+    const row = [];
+    row.push({
+      column: 'A',
+      row: rowNumber,
+      coordinate: `A${rowNumber}`,
+      value: firstName.v
+    });
+    row.push({
+      column: 'B',
+      row: rowNumber,
+      coordinate: `B${rowNumber}`,
+      value: lastName.v
+    });
+    row.push({
+      column: 'C',
+      row: rowNumber,
+      coordinate: `C${rowNumber}`,
+      value: email.v.match(/\d+/)?.toString() ?? null
+    });
+    row.push({
+      column: 'D',
+      row: rowNumber,
+      coordinate: `D${rowNumber}`,
+      value: email.v
+    });
+    content.push(row);
+    rowNumber = rowNumber + 1;
+  }
+
+  return content;
+}
+
+function _extractSessions(sheet) {
+  const sessions = [];
+  let session;
+  let columnCharCode = 'E'.charCodeAt(0);
+  while (session = sheet[`${String.fromCharCode(columnCharCode)}4`]) {
+    const cell = sheet[`${String.fromCharCode(columnCharCode)}4`];
+
+    if (!cell.v || cell.v.length <= 2) {
+      break;
+    }
+
+    sessions.push({ label: session.v, column: String.fromCharCode(columnCharCode) });
+    columnCharCode = columnCharCode + 1;
+  }
+
+  return sessions;
+}
+
+function _extractPossibleStates(sheet) {
+  const states = [];
+  let state;
+  let columnCharCode = 'E'.charCodeAt(0);
+  let started = false;
+  while (state = sheet[`${String.fromCharCode(columnCharCode)}4`]) {
+    const cell = sheet[`${String.fromCharCode(columnCharCode)}4`];
+    columnCharCode = columnCharCode + 1;
+
+    if (!started && cell.v && cell.v.length <= 2) {
+      started = true;
+      states.push({ label: state.v, column: String.fromCharCode(columnCharCode - 1) });
+    }
+    else if (started && cell.v && cell.v.length <= 2) {
+      states.push({ label: state.v, column: String.fromCharCode(columnCharCode - 1) });
+    }
+    else if (started && cell.v && cell.v.length > 2) {
+      break;
+    }
+  }
+
+  return states;
 }

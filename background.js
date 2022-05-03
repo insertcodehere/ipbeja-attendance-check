@@ -24,11 +24,12 @@ chrome.runtime.onConnect.addListener(function (port) {
 
   port.onMessage.addListener(function (event) {
     if (event.source === 'POPUP') {
-      log('[Done] Relay to content-script.js', event);
+      log('Relay to content-script.js', event);
+      debugger;
       ports['page'].postMessage(event);
     }
     else if (event.source === 'CONTENT_SCRIPT') {
-      log('[In progress] Relay to popup.js', event);
+      log('Relay to popup.js', event);
       ports['extension'].postMessage(event);
     }
     else {

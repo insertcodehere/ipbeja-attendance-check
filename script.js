@@ -30,7 +30,6 @@ async function execute(request) {
   const selectionModel = state.getSelectionModel();
   const events = selectionModel.store.events;
 
-
   if (!firstPageButton.disabled) {
     firstPageButton.click();
     await waitUntil(events.load);
@@ -51,7 +50,7 @@ async function execute(request) {
 
     for (let i = 0; i < tablePages; i++) {
       await processNextPage(students);
-      if (students.length == 0 || i + 1 === tablePages) break;
+      if (students.length === 0 || i + 1 === tablePages) break;
       nextPageButton.click();
       await waitUntil(events.load);
     }

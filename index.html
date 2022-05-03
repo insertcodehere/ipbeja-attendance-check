@@ -60,7 +60,7 @@
           <li class="nav-item">
             <button
               id="file-tab"
-              class="nav-link disabled"
+              class="nav-link"
               data-bs-toggle="tab"
               data-bs-target="#file-content"
               type="button"
@@ -94,7 +94,12 @@
 ..."></textarea>
             </div>
           </div>
-          <div class="tab-pane" id="file-content" role="tabpanel" aria-labelledby="file-tab"></div>
+          <div class="tab-pane" id="file-content" role="tabpanel" aria-labelledby="file-tab">
+            <div id="attendance-file-drop-zone" class="file-drop-zone">
+              <label for="attendance-file-input">Click or drop the file here</label>
+              <input id="attendance-file-input" type="file" accept=".xls, .xlsx" />
+            </div>
+          </div>
         </div>
 
         <div class="actions">
@@ -183,6 +188,45 @@
       <div class="offcanvas-footer">Version: 0.0.1-beta</div>
     </div>
 
+    <!-- Modal -->
+    <div
+      class="modal fade"
+      id="selectFileDataDialog"
+      tabindex="-1"
+      aria-labelledby="selectFileDataLabel"
+      aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="selectFileDataLabel">File options</h5>
+            <button type="button" class="btn-close cancel" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="success-file-extraction">
+              <div class="select-date-control">
+                <label class="form-label">Select the day of the class</label>
+                <select class="form-select form-control"></select>
+              </div>
+
+              <div class="all-states">
+                <label class="form-label">Select the attendance type to be considered as a valid attendance</label>
+                <div class="controls"></div>
+              </div>
+            </div>
+
+            <div class="failure-file-extraction">
+              Invalid file format. Please select a Excel file extracted from the CMS Moodle attendance activity.
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary cancel" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary execute">Execute</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="popup-script.js"></script>
+    <script lang="javascript" src="libs/xlsx/xlsx.full.min.js"></script>
   </body>
 </html>
