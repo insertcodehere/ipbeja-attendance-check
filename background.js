@@ -25,7 +25,6 @@ chrome.runtime.onConnect.addListener(function (port) {
   port.onMessage.addListener(function (event) {
     if (event.source === 'POPUP') {
       log('Relay to content-script.js', event);
-      debugger;
       ports['page'].postMessage(event);
     }
     else if (event.source === 'CONTENT_SCRIPT') {
